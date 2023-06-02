@@ -1,0 +1,9 @@
+{
+    "name": "student_horizontal",
+    "type": 0,
+    "label_name": "y",
+    "parties": [
+        "student_homo_test"
+    ],
+    "options": null
+}

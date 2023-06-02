@@ -1,0 +1,12 @@
+{
+    "name": "breast_vertical",
+    "type": 1,
+    "label_name": "y",
+    "parties": [
+        "breast_hetero_guest",
+        "breast_hetero_host"
+    ],
+    "options": {
+        "unique_id": "id"
+    }
+}
