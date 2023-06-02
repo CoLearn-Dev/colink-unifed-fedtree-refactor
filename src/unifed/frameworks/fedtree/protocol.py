@@ -49,6 +49,7 @@ DATASET_TO_OBJECTIVE = {
 }
 
 
+
 def convert_unifed_config_to_fedtree_config(unifed_config):  # note that for the target config, the "data" field is still missing
     tree_param = unifed_config['training']['tree_param']
     fedtree_config = {
@@ -61,6 +62,8 @@ def convert_unifed_config_to_fedtree_config(unifed_config):  # note that for the
         "learning_rate": unifed_config['training']['learning_rate'],
         "verbose": 1,
     }
+    if "vehicle" in unifed_config['dataset']:
+        fedtree_config['num_class'] = 4 # TODO: add this parameter to the interface
     if unifed_config['algorithm'] == 'histsecagg':
         fedtree_config["mode"] = "horizontal"
         fedtree_config["privacy_tech"] = "sa"
@@ -94,9 +97,11 @@ def filter_log_from_fedtree_output(output):
 def run_server(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
     logging.info(f"{cl.get_task_id()[:6]} - Server - Started")
     unifed_config = load_config_from_param_and_check(param)
+    data = unifed_config['dataset']
     fedtree_config = convert_unifed_config_to_fedtree_config(unifed_config)
     if unifed_config['algorithm'] == 'secureboost':
-        fedtree_config["data"] = f"./data/{unifed_config['dataset']}_1.csv"
+        data_name = unifed_config['dataset'].replace("horizontal", "homo").replace("vertical", "hetero")
+        fedtree_config["data"] = f"./csv_data/{unifed_config['dataset']}_train/{data_name}_guest.csv"
     temp_conf_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
     temp_conf_file.write(create_conf_file_content_from_fedtree_config(fedtree_config))
     temp_conf_file.close()
@@ -147,15 +152,17 @@ def run_client(cl: CL.CoLink, param: bytes, participants: List[CL.Participant]):
     logging.info(f"{cl.get_task_id()[:6]} - Client[{client_id}] - Recognized")
 
     unifed_config = load_config_from_param_and_check(param)
+    data = unifed_config['dataset']
     fedtree_config = convert_unifed_config_to_fedtree_config(unifed_config)
-    fedtree_config["data"] = f"./data/{unifed_config['dataset']}_{client_id}.csv"
-    if unifed_config['algorithm'] == 'histsecagg':
-        fedtree_config["n_features"] = {"breast_horizontal": 30}[unifed_config['dataset']]  # currently just a hack, later we should get this from the mapping file for predefined datasets
-    test_data_path = f"./data/{unifed_config['dataset']}"+"_test.csv"
+    data_name = unifed_config['dataset'].replace("horizontal", "homo").replace("vertical", "hetero")
+    if client_id == 0:
+        fedtree_config["data"] = f"./csv_data/{unifed_config['dataset']}_train/{data_name}_guest.csv"
+    else:
+        fedtree_config["data"] = f"./csv_data/{unifed_config['dataset']}_train/{data_name}_host.csv"
+    test_data_path = f"./csv_data/{unifed_config['dataset']}_test/{data_name}_test.csv"
     if os.path.isfile(f"{test_data_path}"):
         fedtree_config["test_data"] = test_data_path
     server_ip = fedtree_config["ip_address"] = cl.recv_variable("server_ip", p_server).decode()
-
     temp_conf_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
     temp_conf_file.write(create_conf_file_content_from_fedtree_config(fedtree_config))
     temp_conf_file.close()
