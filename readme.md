@@ -1,3 +1,5 @@
+To run the experiments: download the data and put it under `csv_data` directory.
+
 # CoLink - UniFed - FedTree
 
 - Link to FedTree: https://github.com/Xtra-Computing/FedTree
