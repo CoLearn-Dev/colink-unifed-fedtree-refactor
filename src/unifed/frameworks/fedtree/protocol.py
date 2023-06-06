@@ -61,9 +61,14 @@ def convert_unifed_config_to_fedtree_config(unifed_config):  # note that for the
         "objective": DATASET_TO_OBJECTIVE[unifed_config['dataset']],
         "learning_rate": unifed_config['training']['learning_rate'],
         "verbose": 1,
+        "lambda": 0.1,
+        "gamma": 0,
     }
     if "vehicle" in unifed_config['dataset']:
         fedtree_config['num_class'] = 4 # TODO: add this parameter to the interface
+    if "give_credit_horizontal" in unifed_config['dataset']:
+        fedtree_config['propose_split'] = "party"
+        
     if unifed_config['algorithm'] == 'histsecagg':
         fedtree_config["mode"] = "horizontal"
         fedtree_config["privacy_tech"] = "sa"
